@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finansal Stratejist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0f1623;
+    --card: #131b2a;
+    --border: #1c2d45;
+    --accent: #00d4ff;
+    --purple: #7c3aed;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #4a6080;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* HEADER */
+  #header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: .12em; }
+  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: .2em; font-family: var(--mono); margin-top: 2px; }
+  .usd-badge { text-align: right; }
+  .usd-label { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .usd-value { font-size: 20px; font-weight: 700; color: var(--yellow); font-family: var(--mono); }
+
+  /* NAV */
+  #nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .nav-btn {
+    padding: 7px 16px; border-radius: 4px; border: none; cursor: pointer;
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    background: transparent; color: var(--muted); transition: all .2s;
+  }
+  .nav-btn.active { background: var(--accent); color: #000; }
+  .nav-btn:hover:not(.active) { color: var(--text); }
+
+  /* ALARMS */
+  #alarms { display: none; padding: 10px 24px; background: #ef444410; border-bottom: 1px solid #ef444430; }
+  .alarm-item { font-size: 12px; color: var(--red); padding: 2px 0; font-family: var(--mono); }
+
+  /* MAIN */
+  #main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+
+  /* TABS */
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
+  .card-title { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 14px; }
+
+  /* GRID */
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px; }
+
+  /* METRIC */
+  .metric-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .metric-label { font-family: var(--mono); font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .metric-value { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--mono); }
+  th { padding: 9px 12px; text-align: left; color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:hover td { background: #ffffff04; }
+
+  /* INPUTS */
+  input, select, textarea {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    border-radius: 4px; padding: 8px 12px; font-size: 13px; font-family: var(--sans);
+    outline: none; transition: border .2s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* BUTTONS */
+  .btn { padding: 9px 18px; border: none; border-radius: 4px; cursor: pointer; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .1em; transition: opacity .2s; white-space: nowrap; }
+  .btn:hover { opacity: .85; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-accent { background: var(--accent); color: #000; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-ghost { background: var(--border); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 10px; }
+
+  /* TAGS */
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 9px; font-weight: 700; font-family: var(--mono); letter-spacing: .1em; }
+  .tag-bist { background: #f59e0b18; color: var(--yellow); border: 1px solid #f59e0b30; }
+  .tag-us { background: #00d4ff18; color: var(--accent); border: 1px solid #00d4ff30; }
+  .tag-ok { background: #10b98118; color: var(--green); border: 1px solid #10b98130; }
+  .tag-risk { background: #ef444418; color: var(--red); border: 1px solid #ef444430; }
+  .tag-type { background: #7c3aed18; color: #a78bfa; border: 1px solid #7c3aed30; }
+
+  /* CHAT */
+  #chat-messages { min-height: 280px; max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px; }
+  .msg { max-width: 82%; display: flex; flex-direction: column; }
+  .msg.user { align-self: flex-end; }
+  .msg.assistant { align-self: flex-start; }
+  .msg-label { font-size: 9px; color: var(--muted); font-family: var(--mono); letter-spacing: .15em; margin-bottom: 4px; }
+  .msg-bubble { padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.7; }
+  .msg.user .msg-bubble { background: #7c3aed28; border: 1px solid #7c3aed44; }
+  .msg.assistant .msg-bubble { background: var(--card); border: 1px solid var(--border); }
+  .msg-bubble h4 { color: var(--accent); margin: 10px 0 4px; font-size: 13px; }
+  .msg-bubble strong { color: var(--text); }
+  .msg-bubble li { margin: 3px 0 3px 16px; }
+
+  /* QUICK PROMPTS */
+  .quick-prompts { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .qp-btn { padding: 6px 12px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; font-size: 11px; font-family: var(--mono); transition: all .2s; }
+  .qp-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* RISK METER */
+  .risk-bar-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+  .risk-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+  /* DONUT */
+  #donut-legend { display: flex; flex-direction: column; gap: 7px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .legend-label { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .legend-pct { font-size: 12px; font-weight: 700; font-family: var(--mono); margin-left: auto; }
+
+  /* FORM GRID */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .form-field label { display: block; font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: .1em; margin-bottom: 4px; }
+
+  /* REPORT */
+  #report-content { font-size: 13px; line-height: 1.9; }
+  #report-content h4 { color: var(--accent); margin: 14px 0 6px; }
+  #report-content strong { color: var(--text); }
+  #report-content li { margin: 4px 0 4px 18px; }
+
+  /* SPINNER */
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .fade-in { animation: fadeIn .3s ease; }
+
+  /* SETUP GUIDE */
+  .setup-step { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #000; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 700; margin-bottom: 4px; font-size: 14px; }
+  .step-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .step-desc a { color: var(--accent); }
+  .step-desc code { background: var(--surface); padding: 1px 6px; border-radius: 3px; font-family: var(--mono); font-size: 11px; color: var(--yellow); }
+
+  /* SUCCESS BOX */
+  .success-box { background: #10b98112; border: 1px solid #10b98140; border-radius: 6px; padding: 12px 16px; font-size: 12px; color: var(--green); font-family: var(--mono); }
+  .warn-box { background: #f59e0b10; border: 1px solid #f59e0b30; border-radius: 6px; padding: 12px 16px; font-size: 12px; color: var(--yellow); line-height: 1.7; }
+  .info-box { background: #00d4ff0c; border: 1px solid #00d4ff25; border-radius: 6px; padding: 12px 16px; font-size: 12px; color: var(--accent); line-height: 1.7; font-family: var(--mono); }
+
+  @media (max-width: 600px) {
+    #main { padding: 14px; }
+    .metric-value { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <div class="logo">▸ FİNANSAL STRATEJİST</div>
+    <div class="logo-sub">KİŞİSEL PORTFÖY YÖNETİM SİSTEMİ</div>
+  </div>
+  <div class="usd-badge">
+    <div class="usd-label">USD / TRY</div>
+    <div class="usd-value" id="usd-display">38.50</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <button class="nav-btn active" onclick="showTab('dashboard')">📊 DASHBOARD</button>
+  <button class="nav-btn" onclick="showTab('portfolio')">💼 PORTFÖY</button>
+  <button class="nav-btn" onclick="showTab('chat')">🤖 STRATEJİST</button>
+  <button class="nav-btn" onclick="showTab('report')">📋 HAFTALIK RAPOR</button>
+  <button class="nav-btn" onclick="showTab('setup')">🚀 KURULUM</button>
+  <button class="nav-btn" onclick="showTab('settings')">⚙️ AYARLAR</button>
+</div>
+
+<!-- ALARMS -->
+<div id="alarms"></div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- ═══════════════════════════════════════════════════════ DASHBOARD -->
+  <div id="tab-dashboard" class="tab active">
+    <div class="grid-4" id="metrics-grid"></div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Piyasa Dağılımı</div>
+        <div style="display:flex;align-items:center;gap:20px">
+          <svg id="donut-svg" width="160" height="160" viewBox="0 0 180 180"></svg>
+          <div id="donut-legend"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Risk Göstergesi</div>
+        <div id="risk-meter"></div>
+        <div style="margin-top:18px">
+          <div class="card-title">Yatırım Hedefleri</div>
+          <div id="goals-display"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pozisyon Özeti</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>SEMBOL</th><th>PİYASA</th><th>GÜNCEL FİYAT</th>
+            <th>P&L %</th><th>STOP MESAFE</th><th>HEDEFE MESAFE</th><th>DURUM</th>
+          </tr></thead>
+          <tbody id="dashboard-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ PORTFOLIO -->
+  <div id="tab-portfolio" class="tab">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase">
+        POZİSYONLAR (<span id="pos-count">0</span>)
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:11px;color:var(--muted);font-family:var(--mono)">USD/TRY:</label>
+        <input id="usdtry-input" type="number" style="width:80px" value="38.5" oninput="state.usdTry=+this.value;document.getElementById('usd-display').textContent=parseFloat(this.value).toFixed(2);renderAll()"/>
+        <button class="btn btn-green" onclick="toggleAddForm()">+ YENİ POZİSYON</button>
+      </div>
+    </div>
+
+    <!-- ADD FORM -->
+    <div id="add-form" style="display:none" class="card" style="border-color:#10b98144">
+      <div class="card-title">Yeni Pozisyon Ekle</div>
+      <div class="form-grid">
+        <div class="form-field"><label>SEMBOL</label><input id="f-symbol" placeholder="THYAO"/></div>
+        <div class="form-field"><label>ŞİRKET ADI</label><input id="f-name" placeholder="Türk Hava Yolları"/></div>
+        <div class="form-field"><label>PİYASA</label>
+          <select id="f-market" onchange="document.getElementById('f-currency').value=this.value==='BIST'?'TL':'USD'">
+            <option>BIST</option><option>NYSE</option><option>NASDAQ</option>
+          </select>
+        </div>
+        <div class="form-field"><label>TÜR</label>
+          <select id="f-type"><option>Hisse</option><option>ETF</option><option>Emtia</option><option>Tahvil</option><option>Döviz</option></select>
+        </div>
+        <div class="form-field"><label>PARA BİRİMİ</label>
+          <select id="f-currency"><option>TL</option><option>USD</option></select>
+        </div>
+        <div class="form-field"><label>ADET</label><input id="f-qty" type="number" placeholder="100"/></div>
+        <div class="form-field"><label>MALİYET</label><input id="f-cost" type="number" placeholder="280"/></div>
+        <div class="form-field"><label>GÜNCEL FİYAT</label><input id="f-price" type="number" placeholder="312"/></div>
+        <div class="form-field"><label>STOP-LOSS</label><input id="f-stop" type="number" placeholder="255"/></div>
+        <div class="form-field"><label>HEDEF</label><input id="f-target" type="number" placeholder="380"/></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-green" onclick="addPosition()">EKLE</button>
+        <button class="btn btn-ghost" onclick="toggleAddForm()">İPTAL</button>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>SEMBOL</th><th>TÜR</th><th>ADET</th><th>MALİYET</th>
+          <th>GÜNCEL</th><th>DEĞER (TL)</th><th>P&L %</th>
+          <th>STOP-LOSS</th><th>HEDEF</th><th>DÜZENLE</th><th>SİL</th>
+        </tr></thead>
+        <tbody id="portfolio-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Yatırım Hedefleri</div>
+      <div class="form-grid">
+        <div class="form-field"><label>KISA VADE (0-6 ay)</label><input id="goal-short" oninput="state.targets.short=this.value"/></div>
+        <div class="form-field"><label>ORTA VADE (6ay-2yıl)</label><input id="goal-mid" oninput="state.targets.mid=this.value"/></div>
+        <div class="form-field"><label>UZUN VADE (2yıl+)</label><input id="goal-long" oninput="state.targets.long=this.value"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ CHAT -->
+  <div id="tab-chat" class="tab">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title">Finansal Stratejistinle Konuş</div>
+      <p style="font-size:12px;color:var(--muted)">Stratejistin portföyünü tanıyor. Direkt soru sor — analiz, senaryo, karar desteği.</p>
+    </div>
+    <div class="quick-prompts">
+      <button class="qp-btn" onclick="setInput('Portföyümü genel değerlendir ve kritik riskleri söyle')">Genel değerlendirme</button>
+      <button class="qp-btn" onclick="setInput('Hangi pozisyonlarımı güçlendirmeliyim, hangilerini azaltmalıyım?')">Pozisyon tavsiyesi</button>
+      <button class="qp-btn" onclick="setInput('Dolar/TL riskime karşı ne yapmalıyım?')">Kur riski</button>
+      <button class="qp-btn" onclick="setInput('Stop-lossa en yakın pozisyonlarım hangileri ve ne yapmalıyım?')">Stop-loss analizi</button>
+      <button class="qp-btn" onclick="setInput('Bu ay 20.000 TL ekstra param var, portföyüme nasıl eklemeliyim?')">Yeni yatırım</button>
+      <button class="qp-btn" onclick="setInput('BIST ve ABD piyasaları için kısa vadeli görüşün nedir?')">Piyasa görüşü</button>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div id="chat-messages">
+        <div style="text-align:center;color:var(--muted);padding:40px 20px">
+          <div style="font-size:36px;margin-bottom:12px">🤖</div>
+          <div style="font-family:var(--mono);font-size:12px;line-height:1.8">
+            Finansal stratejistinle konuşmaya başla.<br/>
+            Portföyünü analiz eder, öneri sunar, risk değerlendirmesi yapar.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <textarea id="chat-input" rows="2" placeholder="Sorunuzu yazın... (Ctrl+Enter ile gönder)" onkeydown="if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){sendChat()}"></textarea>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-accent" id="send-btn" onclick="sendChat()">GÖNDER</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearChat()">TEMİZLE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ REPORT -->
+  <div id="tab-report" class="tab">
+    <div class="card">
+      <div class="card-title">Haftalık Rapor Sistemi</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7">
+        Stratejistin tüm portföyünü analiz ederek kapsamlı haftalık rapor hazırlar. 
+        Kazananlar, kaybedenler, riskli pozisyonlar, piyasa durumu ve eylem planı içerir.
+      </p>
+      <button class="btn btn-accent" id="report-btn" onclick="generateReport()">📋 HAFTALIK RAPOR OLUŞTUR</button>
+    </div>
+
+    <div id="report-card" style="display:none" class="card fade-in">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+        <div>
+          <div class="card-title">HAFTALIK RAPOR</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="report-date"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green btn-sm" onclick="copyReport()">📋 KOPYALA</button>
+          <button class="btn btn-ghost btn-sm" onclick="printReport()">🖨️ YAZDIR</button>
+        </div>
+      </div>
+      <div id="report-content"></div>
+    </div>
+
+    <div class="card warn-box" style="background:var(--card);border-color:var(--border);padding:18px">
+      <div class="card-title">Otomatik E-Posta Kurulumu</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.9">
+        <p style="margin-bottom:10px">Her Pazartesi sabahı otomatik rapor almak için:</p>
+        <p><strong style="color:var(--yellow)">Make.com (Kodsuz, Ücretsiz):</strong><br/>
+        1. make.com'a üye ol → Yeni Senaryo → Schedule (Pazartesi 09:00)<br/>
+        2. HTTP Request modülü → POST <code>senin-site.vercel.app/api/claude</code><br/>
+        3. Gmail modülü → raporu e-postaya gönder<br/>
+        4. Aktif et — bitti!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ SETUP -->
+  <div id="tab-setup" class="tab">
+    <div class="card">
+      <div class="card-title">🚀 Vercel Kurulum Rehberi — 30 Dakikada Biter</div>
+      <div class="info-box" style="margin-bottom:16px">
+        Bu uygulamayı kalıcı olarak kullanmak için 3 şeye ihtiyacın var:<br/>
+        <strong>GitHub hesabı</strong> (ücretsiz) + <strong>Vercel hesabı</strong> (ücretsiz) + <strong>Anthropic API anahtarı</strong> (~$5-10/ay)
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">GitHub Hesabı Aç</div>
+          <div class="step-desc">
+            <a href="https://github.com" target="_blank">github.com</a>'a git → Sign Up → E-posta + şifre gir → Hesabı onayla.<br/>
+            Giriş yaptıktan sonra sağ üstte <strong>+</strong> → <strong>New repository</strong> tıkla.<br/>
+            İsim: <code>finansal-stratejist</code> → Public seç → <strong>Create repository</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Dosyaları GitHub'a Yükle</div>
+          <div class="step-desc">
+            Aşağıdaki <strong>İNDİR</strong> butonuyla proje dosyalarını indir.<br/>
+            GitHub'da açtığın sayfada <strong>"uploading an existing file"</strong> linkine tıkla.<br/>
+            İndirdiğin 3 dosyayı sürükle-bırak → <strong>Commit changes</strong> tıkla.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Vercel'e Deploy Et</div>
+          <div class="step-desc">
+            <a href="https://vercel.com" target="_blank">vercel.com</a>'a git → <strong>Sign up with GitHub</strong>.<br/>
+            <strong>Add New Project</strong> → <code>finansal-stratejist</code> → <strong>Import</strong>.<br/>
+            Hiçbir şeye dokunma → <strong>Deploy</strong> tıkla → 1-2 dakika bekle.<br/>
+            ✅ Sana bir link verecek: <code>finansal-stratejist.vercel.app</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Anthropic API Anahtarı Al</div>
+          <div class="step-desc">
+            <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>'a git → Hesap aç.<br/>
+            Sol menü → <strong>API Keys</strong> → <strong>Create Key</strong> → Çıkan kodu kopyala (<code>sk-ant-...</code>).<br/>
+            <strong>⚠️ Bu kodu kimseyle paylaşma!</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">API Anahtarını Vercel'e Ekle (ÇOK ÖNEMLİ)</div>
+          <div class="step-desc">
+            Vercel Dashboard → Projen → <strong>Settings</strong> → <strong>Environment Variables</strong>.<br/>
+            <strong>Name:</strong> <code>ANTHROPIC_API_KEY</code><br/>
+            <strong>Value:</strong> (az önce kopyaladığın sk-ant-... kodu)<br/>
+            <strong>Save</strong> tıkla → Sonra <strong>Deployments</strong> → son deploy → <strong>Redeploy</strong> tıkla.<br/>
+            ✅ Artık AI çalışıyor!
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step" style="border:none">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">Portföyünü Gir ve Kullanmaya Başla</div>
+          <div class="step-desc">
+            Sitenizi açın → <strong>Portföy</strong> sekmesi → Örnek verileri sil → Kendi hisselerini gir.<br/>
+            Sonra <strong>Stratejist</strong> sekmesine geç ve ilk soruyu sor. 🎉
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-accent" onclick="downloadProject()">⬇️ PROJE DOSYALARINI İNDİR</button>
+        <button class="btn btn-ghost" onclick="showTab('settings')">⚙️ AYARLAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ SETTINGS -->
+  <div id="tab-settings" class="tab">
+    <div class="card">
+      <div class="card-title">Yatırımcı Profili</div>
+      <div class="form-grid">
+        <div class="form-field"><label>AD SOYAD</label><input id="s-name" oninput="state.profile.name=this.value"/></div>
+        <div class="form-field"><label>YAŞ</label><input id="s-age" type="number" oninput="state.profile.age=+this.value"/></div>
+        <div class="form-field"><label>AYLIK YATIRIM (TL)</label><input id="s-monthly" type="number" oninput="state.profile.monthlyInvestment=+this.value"/></div>
+        <div class="form-field"><label>RİSK TOLERANSI</label>
+          <select id="s-risk" onchange="state.profile.risk=this.value">
+            <option>Düşük</option><option selected>Orta</option><option>Yüksek</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Veri Yönetimi</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Portföy verilerini kaydet veya yükle.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-accent" onclick="saveData()">💾 TARAYICIYA KAYDET</button>
+        <button class="btn btn-green" onclick="loadData()">📂 KAYITTAN YÜKLE</button>
+        <button class="btn btn-ghost" onclick="exportJSON()">⬇️ JSON İNDİR</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">⬆️ JSON YÜKLE</button>
+        <input id="import-file" type="file" accept=".json" style="display:none" onchange="importJSON(this)"/>
+      </div>
+      <div id="save-status" style="margin-top:10px;font-size:12px;font-family:var(--mono)"></div>
+    </div>
+
+    <div class="card info-box">
+      <div class="card-title" style="color:var(--accent)">⚠️ API Anahtarı Hakkında</div>
+      Vercel kurulumunda API anahtarını <strong>Vercel Environment Variables</strong>'a ekliyorsun.<br/>
+      Bu sayede anahtar hiç tarayıcıya gelmiyor — tamamen güvende.<br/>
+      Kurulum rehberi için <strong>🚀 Kurulum</strong> sekmesine bak.
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+const state = {
+  usdTry: 38.5,
+  profile: { name: "Yatırımcı", age: 35, risk: "Orta", monthlyInvestment: 10000 },
+  targets: {
+    short: "6 ayda %15 reel getiri",
+    mid: "2 yılda portföyü 2x'e çıkarmak",
+    long: "Pasif gelir ve emeklilik güvencesi"
+  },
+  positions: [
+    { id:1, symbol:"THYAO", name:"Türk Hava Yolları", market:"BIST", type:"Hisse", qty:500, cost:280, price:312, currency:"TL", stop:255, target:380 },
+    { id:2, symbol:"AKBNK", name:"Akbank", market:"BIST", type:"Hisse", qty:1000, cost:42, price:45.8, currency:"TL", stop:37, target:58 },
+    { id:3, symbol:"EREGL", name:"Ereğli Demir Çelik", market:"BIST", type:"Hisse", qty:800, cost:38, price:35.2, currency:"TL", stop:32, target:48 },
+    { id:4, symbol:"NVDA", name:"NVIDIA Corp", market:"NYSE", type:"Hisse", qty:10, cost:480, price:875, currency:"USD", stop:720, target:1100 },
+    { id:5, symbol:"AAPL", name:"Apple Inc", market:"NASDAQ", type:"Hisse", qty:15, cost:175, price:189, currency:"USD", stop:165, target:220 },
+    { id:6, symbol:"SPY", name:"S&P 500 ETF", market:"NYSE", type:"ETF", qty:5, cost:450, price:512, currency:"USD", stop:430, target:580 },
+    { id:7, symbol:"XU100", name:"BIST100 ETF", market:"BIST", type:"ETF", qty:200, cost:520, price:580, currency:"TL", stop:470, target:680 },
+    { id:8, symbol:"ALTIN", name:"Altın (gr)", market:"BIST", type:"Emtia", qty:20, cost:1850, price:2150, currency:"TL", stop:1700, target:2500 },
+  ],
+  chatHistory: [],
+};
+
+const SYSTEM_PROMPT = `Sen deneyimli bir finansal stratejistsin. Hem Borsa İstanbul (BIST) hem de ABD piyasalarında uzman düzeyde analiz yapıyorsun. 20+ yıl kurumsal portföy yönetimi deneyimin var. Kur riskini, enflasyonu, jeopolitik faktörleri her analizine dahil ediyorsun. Her öneri için risk/ödül oranını belirt. Stop-loss ve hedef fiyat ver. Önce riski konuş, sonra fırsatı. Kesin kazanç garantisi verme, senaryolar sun. Yanıtlarında Markdown kullan: **kalın**, *italik*, ## başlıklar, - listeler.`;
+
+// ══════════════════════════════════════════════════════════════════
+// COMPUTED
+// ══════════════════════════════════════════════════════════════════
+function getMetrics() {
+  let totalTL = 0, totalCostTL = 0;
+  state.positions.forEach(p => {
+    const m = p.currency === "USD" ? state.usdTry : 1;
+    totalTL += p.qty * p.price * m;
+    totalCostTL += p.qty * p.cost * m;
+  });
+  return { totalTL, totalCostTL, pnlTL: totalTL - totalCostTL, pnlPct: totalCostTL > 0 ? (totalTL - totalCostTL) / totalCostTL * 100 : 0 };
+}
+
+function fmt(n, cur = "TL") {
+  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(n) + " " + cur;
+}
+
+function pctStr(n) { return (n >= 0 ? "+" : "") + n.toFixed(2) + "%"; }
+function pctColor(n) { return n >= 0 ? "var(--green)" : "var(--red)"; }
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════
+function renderAll() {
+  renderAlarms();
+  renderMetrics();
+  renderDonut();
+  renderRisk();
+  renderGoals();
+  renderDashboardTable();
+  renderPortfolioTable();
+}
+
+function renderAlarms() {
+  const risky = state.positions.filter(p => p.price <= p.stop * 1.05);
+  const el = document.getElementById("alarms");
+  if (risky.length === 0) { el.style.display = "none"; return; }
+  el.style.display = "block";
+  el.innerHTML = risky.map(p => `<div class="alarm-item">⚠️ ${p.symbol} stop-loss seviyesine çok yakın! Güncel: ${p.price} ${p.currency} / Stop: ${p.stop} ${p.currency}</div>`).join("");
+}
+
+function renderMetrics() {
+  const m = getMetrics();
+  document.getElementById("metrics-grid").innerHTML = [
+    { label: "TOPLAM DEĞER (TL)", val: fmt(m.totalTL), color: "var(--accent)" },
+    { label: "TOPLAM DEĞER (USD)", val: fmt(m.totalTL / state.usdTry, "USD"), color: "var(--yellow)" },
+    { label: "TOPLAM P&L", val: (m.pnlTL >= 0 ? "+" : "") + fmt(m.pnlTL), color: pctColor(m.pnlTL) },
+    { label: "P&L %", val: pctStr(m.pnlPct), color: pctColor(m.pnlPct) },
+  ].map(x => `<div class="metric-card"><div class="metric-label">${x.label}</div><div class="metric-value" style="color:${x.color}">${x.val}</div></div>`).join("");
+}
+
+function renderDonut() {
+  const sectors = {};
+  state.positions.forEach(p => {
+    const m = p.currency === "USD" ? state.usdTry : 1;
+    sectors[p.market] = (sectors[p.market] || 0) + p.qty * p.price * m;
+  });
+  const entries = Object.entries(sectors);
+  const total = entries.reduce((a, [, v]) => a + v, 0);
+  const colors = ["var(--accent)", "var(--yellow)", "var(--green)", "var(--purple)", "var(--red)"];
+  const svg = document.getElementById("donut-svg");
+  const legend = document.getElementById("donut-legend");
+  let angle = 0, paths = "", legendHTML = "";
+  entries.forEach(([label, val], i) => {
+    const deg = (val / total) * 360;
+    const r = 70, cx = 90, cy = 90;
+    const s = (angle - 90) * Math.PI / 180;
+    const e = (angle + deg - 90) * Math.PI / 180;
+    const x1 = cx + r * Math.cos(s), y1 = cy + r * Math.sin(s);
+    const x2 = cx + r * Math.cos(e), y2 = cy + r * Math.sin(e);
+    const large = deg > 180 ? 1 : 0;
+    paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z" fill="${colors[i % colors.length]}" opacity=".85"/>`;
+    legendHTML += `<div class="legend-item"><div class="legend-dot" style="background:${colors[i % colors.length]}"></div><span class="legend-label">${label}</span><span class="legend-pct" style="color:${colors[i % colors.length]}">${(val / total * 100).toFixed(1)}%</span></div>`;
+    angle += deg;
+  });
+  paths += `<circle cx="90" cy="90" r="42" fill="var(--card)"/>`;
+  paths += `<text x="90" y="87" text-anchor="middle" fill="var(--text)" font-size="10" font-family="IBM Plex Mono">DAĞILIM</text>`;
+  paths += `<text x="90" y="102" text-anchor="middle" fill="var(--muted)" font-size="8" font-family="IBM Plex Mono">PİYASA</text>`;
+  svg.innerHTML = paths;
+  legend.innerHTML = legendHTML;
+}
+
+function renderRisk() {
+  const risky = state.positions.filter(p => p.price <= p.stop * 1.05).length;
+  const m = getMetrics();
+  const score = Math.min(100, (risky / state.positions.length) * 100 + (m.pnlPct < -5 ? 30 : 0));
+  const color = score < 30 ? "var(--green)" : score < 60 ? "var(--yellow)" : "var(--red)";
+  const label = score < 30 ? "DÜŞÜK" : score < 60 ? "ORTA" : "YÜKSEK";
+  document.getElementById("risk-meter").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em">PORTFÖY RİSK SKORU</span>
+      <span class="tag tag-${score < 30 ? 'ok' : 'risk'}">${label}</span>
+    </div>
+    <div class="risk-bar-bg"><div class="risk-bar-fill" style="width:${score}%;background:linear-gradient(90deg,var(--green),${color})"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px">
+      <span style="font-size:9px;color:var(--muted);font-family:var(--mono)">GÜVENLİ</span>
+      <span style="font-size:13px;font-weight:700;color:${color};font-family:var(--mono)">${score.toFixed(0)}/100</span>
+      <span style="font-size:9px;color:var(--muted);font-family:var(--mono)">KRİTİK</span>
+    </div>`;
+}
+
+function renderGoals() {
+  const goalsEl = document.getElementById("goals-display");
+  if (!goalsEl) return;
+  const items = [
+    { label: "KISA", val: state.targets.short, color: "var(--green)" },
+    { label: "ORTA", val: state.targets.mid, color: "var(--yellow)" },
+    { label: "UZUN", val: state.targets.long, color: "var(--accent)" },
+  ];
+  goalsEl.innerHTML = items.map(g => `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start"><span class="tag" style="background:${g.color}18;color:${g.color};border:1px solid ${g.color}33;flex-shrink:0">${g.label}</span><span style="font-size:11px;color:var(--muted);line-height:1.5">${g.val}</span></div>`).join("");
+}
+
+function renderDashboardTable() {
+  document.getElementById("dashboard-tbody").innerHTML = state.positions.map(p => {
+    const pnl = (p.price - p.cost) / p.cost * 100;
+    const stopDist = (p.price - p.stop) / p.price * 100;
+    const tgtDist = (p.target - p.price) / p.price * 100;
+    const atRisk = stopDist < 5;
+    return `<tr style="background:${atRisk ? "#ef444408" : "transparent"}">
+      <td><strong style="color:var(--accent);font-family:var(--mono)">${p.symbol}</strong><br/><span style="font-size:10px;color:var(--muted)">${p.name}</span></td>
+      <td><span class="tag ${p.market === 'BIST' ? 'tag-bist' : 'tag-us'}">${p.market}</span></td>
+      <td style="font-family:var(--mono)">${p.price} ${p.currency}</td>
+      <td style="color:${pctColor(pnl)};font-family:var(--mono);font-weight:700">${pctStr(pnl)}</td>
+      <td style="color:${stopDist < 5 ? 'var(--red)' : 'var(--muted)'};font-family:var(--mono)">${stopDist.toFixed(1)}%</td>
+      <td style="color:var(--green);font-family:var(--mono)">+${tgtDist.toFixed(1)}%</td>
+      <td><span class="tag ${atRisk ? 'tag-risk' : 'tag-ok'}">${atRisk ? "⚠ RİSK" : "✓ NORMAL"}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderPortfolioTable() {
+  document.getElementById("pos-count").textContent = state.positions.length;
+  document.getElementById("portfolio-tbody").innerHTML = state.positions.map(p => {
+    const pnl = (p.price - p.cost) / p.cost * 100;
+    const mult = p.currency === "USD" ? state.usdTry : 1;
+    const valTL = p.qty * p.price * mult;
+    return `<tr id="row-${p.id}">
+      <td><strong style="color:var(--accent);font-family:var(--mono)">${p.symbol}</strong><br/><span style="font-size:10px;color:var(--muted)">${p.name}</span></td>
+      <td><span class="tag tag-type">${p.type}</span></td>
+      <td><input style="width:70px;padding:4px 6px;font-size:11px" type="number" value="${p.qty}" onchange="updatePos(${p.id},'qty',+this.value)"/></td>
+      <td><input style="width:80px;padding:4px 6px;font-size:11px" type="number" value="${p.cost}" onchange="updatePos(${p.id},'cost',+this.value)"/></td>
+      <td><input style="width:80px;padding:4px 6px;font-size:11px" type="number" value="${p.price}" onchange="updatePos(${p.id},'price',+this.value)"/></td>
+      <td style="font-family:var(--mono);font-size:11px">${fmt(valTL)}</td>
+      <td style="color:${pctColor(pnl)};font-family:var(--mono);font-weight:700">${pctStr(pnl)}</td>
+      <td><input style="width:75px;padding:4px 6px;font-size:11px;color:var(--red)" type="number" value="${p.stop}" onchange="updatePos(${p.id},'stop',+this.value)"/></td>
+      <td><input style="width:75px;padding:4px 6px;font-size:11px;color:var(--green)" type="number" value="${p.target}" onchange="updatePos(${p.id},'target',+this.value)"/></td>
+      <td colspan="2"><button class="btn btn-red btn-sm" onclick="removePos(${p.id})">✕ SİL</button></td>
+    </tr>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PORTFOLIO ACTIONS
+// ══════════════════════════════════════════════════════════════════
+function updatePos(id, field, val) {
+  const p = state.positions.find(x => x.id === id);
+  if (p) { p[field] = val; renderAll(); }
+}
+
+function removePos(id) {
+  state.positions = state.positions.filter(p => p.id !== id);
+  renderAll();
+}
+
+function toggleAddForm() {
+  const f = document.getElementById("add-form");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+function addPosition() {
+  const sym = document.getElementById("f-symbol").value.trim().toUpperCase();
+  if (!sym) return alert("Sembol girin!");
+  state.positions.push({
+    id: Date.now(),
+    symbol: sym,
+    name: document.getElementById("f-name").value || sym,
+    market: document.getElementById("f-market").value,
+    type: document.getElementById("f-type").value,
+    currency: document.getElementById("f-currency").value,
+    qty: +document.getElementById("f-qty").value || 0,
+    cost: +document.getElementById("f-cost").value || 0,
+    price: +document.getElementById("f-price").value || 0,
+    stop: +document.getElementById("f-stop").value || 0,
+    target: +document.getElementById("f-target").value || 0,
+  });
+  ["f-symbol","f-name","f-qty","f-cost","f-price","f-stop","f-target"].forEach(id => document.getElementById(id).value = "");
+  toggleAddForm();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AI CHAT
+// ══════════════════════════════════════════════════════════════════
+function buildPortfolioContext() {
+  const m = getMetrics();
+  return `PORTFÖY DURUMU:
+- Toplam Değer: ${fmt(m.totalTL)} / ${fmt(m.totalTL / state.usdTry, "USD")}
+- P&L: ${m.pnlTL >= 0 ? "+" : ""}${fmt(m.pnlTL)} (${m.pnlPct.toFixed(1)}%)
+- USD/TRY: ${state.usdTry}
+- Risk Profili: ${state.profile.risk}
+- Pozisyonlar:
+${state.positions.map(p => {
+  const pnl = ((p.price - p.cost) / p.cost * 100).toFixed(1);
+  const toStop = ((p.price - p.stop) / p.price * 100).toFixed(1);
+  return `  • ${p.symbol} (${p.market}/${p.type}): ${p.qty} adet | Maliyet ${p.cost} | Güncel ${p.price} ${p.currency} | P&L %${pnl} | Stop'a mesafe %${toStop}`;
+}).join("\n")}
+- Hedefler: Kısa: ${state.targets.short} | Orta: ${state.targets.mid} | Uzun: ${state.targets.long}
+`;
+}
+
+function setInput(text) {
+  document.getElementById("chat-input").value = text;
+  document.getElementById("chat-input").focus();
+}
+
+function appendMessage(role, content) {
+  const container = document.getElementById("chat-messages");
+  // Remove empty state
+  const empty = container.querySelector("div[style*='text-align:center']");
+  if (empty) empty.remove();
+
+  const div = document.createElement("div");
+  div.className = `msg ${role} fade-in`;
+  div.innerHTML = `
+    <div class="msg-label">${role === "user" ? "SEN" : "STRATEJİST"}</div>
+    <div class="msg-bubble">${parseMarkdown(content)}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function parseMarkdown(text) {
+  return text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/^#{1,3} (.+)/gm, "<h4>$1</h4>")
+    .replace(/^- (.+)/gm, "<li>$1</li>")
+    .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
+    .replace(/\n/g, "<br/>");
+}
+
+async function sendChat() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text || document.getElementById("send-btn").disabled) return;
+
+  appendMessage("user", text);
+  input.value = "";
+  state.chatHistory.push({ role: "user", content: buildPortfolioContext() + "\n\nSORU: " + text });
+
+  const btn = document.getElementById("send-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>...';
+
+  const thinkingDiv = appendMessage("assistant", '<span style="color:var(--muted)">Analiz yapılıyor...</span>');
+
+  try {
+    const response = await fetch("/api/claude", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: SYSTEM_PROMPT, messages: state.chatHistory }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "API hatası");
+
+    thinkingDiv.querySelector(".msg-bubble").innerHTML = parseMarkdown(data.text);
+    state.chatHistory.push({ role: "assistant", content: data.text });
+  } catch (err) {
+    thinkingDiv.querySelector(".msg-bubble").innerHTML = `<span style="color:var(--red)">❌ Hata: ${err.message}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = "GÖNDER";
+  document.getElementById("chat-messages").scrollTop = 99999;
+}
+
+function clearChat() {
+  state.chatHistory = [];
+  document.getElementById("chat-messages").innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px"><div style="font-size:36px;margin-bottom:12px">🤖</div><div style="font-family:var(--mono);font-size:12px;line-height:1.8">Finansal stratejistinle konuşmaya başla.<br/>Portföyünü analiz eder, öneri sunar, risk değerlendirmesi yapar.</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// WEEKLY REPORT
+// ══════════════════════════════════════════════════════════════════
+async function generateReport() {
+  const btn = document.getElementById("report-btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>RAPOR HAZIRLANIYOR...';
+
+  const m = getMetrics();
+  const prompt = `Aşağıdaki portföy için KAPSAMLI HAFTALIK RAPOR oluştur:
+
+${buildPortfolioContext()}
+
+Rapor şunları içermeli:
+## 📊 HAFTALIK ÖZET
+## 🏆 EN İYİ PERFORMANS GÖSTERENLER
+## ⚠️ DİKKAT GEREKTİREN POZİSYONLAR
+## 🌍 MAKRO BAĞLAM (BIST ve ABD piyasaları)
+## 📋 GELECEK HAFTA EYLEM PLANI
+## 💡 STRATEJİK ÖNERİ`;
+
+  try {
+    const response = await fetch("/api/claude", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: SYSTEM_PROMPT, messages: [{ role: "user", content: prompt }] }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "API hatası");
+
+    document.getElementById("report-date").textContent = new Date().toLocaleDateString("tr-TR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    document.getElementById("report-content").innerHTML = parseMarkdown(data.text);
+    document.getElementById("report-card").style.display = "block";
+    document.getElementById("report-card").scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    alert("Rapor hatası: " + err.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = "📋 HAFTALIK RAPOR OLUŞTUR";
+}
+
+function copyReport() {
+  const text = document.getElementById("report-content").innerText;
+  navigator.clipboard.writeText(text).then(() => alert("Rapor panoya kopyalandı!"));
+}
+
+function printReport() { window.print(); }
+
+// ══════════════════════════════════════════════════════════════════
+// DATA MANAGEMENT
+// ══════════════════════════════════════════════════════════════════
+function saveData() {
+  localStorage.setItem("fs_portfolio", JSON.stringify(state));
+  const el = document.getElementById("save-status");
+  el.innerHTML = '<span style="color:var(--green)">✓ Kaydedildi: ' + new Date().toLocaleTimeString("tr-TR") + '</span>';
+}
+
+function loadData() {
+  const raw = localStorage.getItem("fs_portfolio");
+  if (!raw) return alert("Kayıtlı veri bulunamadı.");
+  const d = JSON.parse(raw);
+  Object.assign(state, d);
+  syncInputs();
+  renderAll();
+  const el = document.getElementById("save-status");
+  el.innerHTML = '<span style="color:var(--accent)">✓ Yüklendi</span>';
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "portfoy-" + new Date().toISOString().split("T")[0] + ".json"; a.click();
+}
+
+function importJSON(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { try { Object.assign(state, JSON.parse(e.target.result)); syncInputs(); renderAll(); alert("✓ Portföy yüklendi!"); } catch { alert("Dosya hatalı!"); } };
+  reader.readAsText(file);
+}
+
+function syncInputs() {
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal("usdtry-input", state.usdTry);
+  setVal("usd-display", parseFloat(state.usdTry).toFixed(2));
+  setVal("goal-short", state.targets.short);
+  setVal("goal-mid", state.targets.mid);
+  setVal("goal-long", state.targets.long);
+  setVal("s-name", state.profile.name);
+  setVal("s-age", state.profile.age);
+  setVal("s-monthly", state.profile.monthlyInvestment);
+  setVal("s-risk", state.profile.risk);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + id).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b => { if (b.textContent.toLowerCase().includes(id === "dashboard" ? "dashboard" : id === "portfolio" ? "portföy" : id === "chat" ? "stratejist" : id === "report" ? "haftalık" : id === "setup" ? "kurulum" : "ayarlar")) b.classList.add("active"); });
+  if (id === "portfolio") { renderPortfolioTable(); syncInputs(); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DOWNLOAD PROJECT FILES
+// ══════════════════════════════════════════════════════════════════
+function downloadProject() {
+  alert("Bu sayfayı indirmek için:\n\nSağ tık → Farklı Kaydet → 'finansal-stratejist/public/index.html' olarak kaydet.\n\nSonra kurulum rehberindeki diğer dosyaları (api/claude.js ve vercel.json) oluşturman gerekiyor — kurulum sekmesinde adımlar var.");
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+window.addEventListener("load", () => {
+  syncInputs();
+  renderAll();
+  // Try to load saved data
+  const raw = localStorage.getItem("fs_portfolio");
+  if (raw) { try { Object.assign(state, JSON.parse(raw)); syncInputs(); renderAll(); } catch {} }
+});
+</script>
+</body>
+</html>
