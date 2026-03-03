@@ -14,7 +14,7 @@ if (!apiKey) return res.status(500).json({ error: “ANTHROPIC_API_KEY bulunamad
 try {
 const { messages, system } = req.body;
 
-```
+
 const response = await fetch("https://api.anthropic.com/v1/messages", {
   method: "POST",
   headers: {
